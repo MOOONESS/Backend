@@ -15,7 +15,7 @@ logger = logging.getLogger()
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000"
+    "*"
 ]
 
 # add CORS so our web page can connect to our api
@@ -56,6 +56,8 @@ models.Base.metadata.create_all(bind=engine)
 
 @app.post("/drone/", response_model=TransactionModel)
 async def create_drone(drone: TransactionBase, db: Session = db_dependency):
+    print("------------")
+    print(drone)
     db_drone = models.drone(**drone.dict())
     db.add(db_drone)
     db.commit()
@@ -106,39 +108,6 @@ async def drone_events(db: Session = db_dependency):
             }
             yield f"{json.dumps(event)}\n\n"
             
-            await asyncio.sleep(1)  # Adjust the interval as needed
+            await asyncio.sleep(10)  # Adjust the interval as needed
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
-
-
-# from fastapi import FastAPI, Response
-# from fastapi.responses import StreamingResponse
-# from fastapi.middleware.cors import CORSMiddleware
-# import json, uvicorn
-# from asyncio import sleep
-
-# app = FastAPI()
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# async def waypoints_generator():
-#     waypoints = open('waypoints.json')
-#     waypoints = json.load(waypoints)
-#     for waypoint in waypoints[0: 10]:
-#         data = json.dumps(waypoint)
-#         yield f"event: locationUpdate\ndata: {data}\n\n"
-#         await sleep(1)
-
-# @app.get("/get-waypoints")
-# async def root():
-#     return StreamingResponse(waypoints_generator(), media_type="text/event-stream")
-
-
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="127.0.0.1", port=8000)
+    return EventSourceResponse(event_generator(), media_type="text/event-stream")

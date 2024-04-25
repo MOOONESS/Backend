@@ -1,48 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import droneIconUrl from './drone.png';
 
 function Map() {
-  const [droneData, setDroneData] = useState([]);
-  const [currentDroneId, setCurrentDroneId] = useState(0);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8081/geoserver/pfa/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=pfa%3Adrones&maxFeatures=50&outputFormat=application%2Fjson&cql_filter=id=${currentDroneId}`
-        );
-        setDroneData((prevData) => {
-          // Clear previous drone data before setting new data
-          return [response.data];
-        });
-      } catch (error) {
-        console.error('Error fetching WFS data:', error);
-      }
+  const [drones, setDrones] = useState([]);
+
+    useEffect(() => {
+    const eventSource = new EventSource('http://localhost:8000/drones/sse');
+
+    eventSource.onopen = () => console.log('Connected to SSE server');
+
+    eventSource.onmessage = (event) => {
+        try {
+        const newDrones = JSON.parse(JSON.parse(event.data).data);
+        setDrones(Array.isArray(newDrones) ? newDrones : []);
+        console.log(newDrones)
+        } catch (error) {
+        console.error('Error parsing SSE data:', error);
+        }
     };
 
-    const intervalId = setInterval(() => {
-      setCurrentDroneId((prevId) => {
-        if (prevId < 7) {
-          return prevId + 1;
-        } else {
-          clearInterval(intervalId);
-          return 0; // Reset to display drones with ID=0 again
-        }
-      });
-    }, 3000);
-
-    // Initial fetch
-    fetchData();
+    eventSource.onerror = (error) => {
+        console.error('Error with SSE connection:', error);
+        eventSource.close();
+    };
 
     return () => {
-      clearInterval(intervalId);
+        eventSource.close();
+        console.log('SSE connection closed');
     };
-  }, [currentDroneId]);
-  
+    }, []);
+
+  const [i, setI] = useState(0);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setI((prevI) => (prevI < 6 ? prevI + 1 : 6));
+    }, 4000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <div>
       <MapContainer
@@ -54,24 +55,25 @@ function Map() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {droneData.map((data) =>
-          data.features.map((feature) => (
-            <Marker
-              key={feature.properties.id}
-              position={[
-                feature.geometry.coordinates[1],
-                feature.geometry.coordinates[0],
-              ]}
-            >
-              <Popup>
-                <div>
-                  <h3>Drone {feature.properties.nature}</h3>
-                  <p>Drone-Numero: {feature.properties.numero}</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))
-        )}
+        {drones
+  .filter(drone => drone.pos === i)
+  .map((drone) => (
+    <Marker
+      key={drone.id}
+      position={[drone.latitude, drone.longitude]}
+    >
+      <Popup>
+        <div>
+          <h3>Drone {drone.nature}</h3>
+          <p>Drone ID: {drone.id}</p>
+          <p>Drone Numero: {drone.numero}</p>
+          <p>Drone Position: {drone.pos}</p>
+        </div>
+      </Popup>
+    </Marker>
+  ))
+}
+
       </MapContainer>
     </div>
   );

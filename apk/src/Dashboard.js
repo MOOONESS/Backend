@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import Maap from './Maap';
+import Map from './Map';
+import './Dashboard.css'
 
 function Dashboard() {
   const [mapVisible, setMapVisible] = useState(false);
@@ -13,7 +14,7 @@ function Dashboard() {
         <button onClick={toggleMapVisibility}>
         {mapVisible ? 'Hide Map' : 'Show Map'}
         </button>
-        {mapVisible && <Maap />}
+        {mapVisible && <Map />}
     </div>
   );
 }
