@@ -5,44 +5,49 @@ import L from 'leaflet';
 import droneIconUrl from './drone.png';
 
 function Map() {
-
   const [drones, setDrones] = useState([]);
+  const [maxPos, setMaxPos] = useState(0); // Initialize maxPos state
+  const [i,setI]=useState(0);
 
-    useEffect(() => {
+  useEffect(() => {
     const eventSource = new EventSource('http://localhost:8000/drones/sse');
 
     eventSource.onopen = () => console.log('Connected to SSE server');
 
     eventSource.onmessage = (event) => {
-        try {
+      try {
         const newDrones = JSON.parse(JSON.parse(event.data).data);
         setDrones(Array.isArray(newDrones) ? newDrones : []);
-        console.log(newDrones)
-        } catch (error) {
+
+        // Find the maximum position among the new drones
+        const newPos = Math.max(...newDrones.map(drone => drone.pos));
+        setMaxPos(newPos);
+
+        console.log(newDrones);
+      } catch (error) {
         console.error('Error parsing SSE data:', error);
-        }
+      }
     };
 
     eventSource.onerror = (error) => {
-        console.error('Error with SSE connection:', error);
-        eventSource.close();
+      console.error('Error with SSE connection:', error);
+      eventSource.close();
     };
 
     return () => {
-        eventSource.close();
-        console.log('SSE connection closed');
+      eventSource.close();
+      console.log('SSE connection closed');
     };
-    }, []);
-
-  const [i, setI] = useState(0);
+  }, []);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setI((prevI) => (prevI < 6 ? prevI + 1 : 6));
+      // No need to find max_pos here, just use maxPos state
+      setI((prevI) => (prevI < maxPos ? prevI + 1 : maxPos));
     }, 4000);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [maxPos]); // Include maxPos in the dependency array
 
   return (
     <div>
@@ -56,24 +61,22 @@ function Map() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {drones
-  .filter(drone => drone.pos === i)
-  .map((drone) => (
-    <Marker
-      key={drone.id}
-      position={[drone.latitude, drone.longitude]}
-    >
-      <Popup>
-        <div>
-          <h3>Drone {drone.nature}</h3>
-          <p>Drone ID: {drone.id}</p>
-          <p>Drone Numero: {drone.numero}</p>
-          <p>Drone Position: {drone.pos}</p>
-        </div>
-      </Popup>
-    </Marker>
-  ))
-}
-
+          .filter(drone => drone.pos === i) // Filter drones with maxPos
+          .map((drone) => (
+            <Marker
+              key={drone.id}
+              position={[drone.latitude, drone.longitude]}
+            >
+              <Popup>
+                <div>
+                  <h3>Drone {drone.nature}</h3>
+                  <p>Drone ID: {drone.id}</p>
+                  <p>Drone Numero: {drone.numero}</p>
+                  <p>Drone Position: {drone.pos}</p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
       </MapContainer>
     </div>
   );

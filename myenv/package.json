@@ -1,5 +1,9 @@
 {
   "dependencies": {
+    "chart.js": "^4.4.2",
     "websocket": "^1.0.34"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
   }
 }

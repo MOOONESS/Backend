@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Map from './Map';
-import './Dashboard.css'
+
 
 function Dashboard() {
   const [mapVisible, setMapVisible] = useState(false);
