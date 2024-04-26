@@ -1,14 +1,12 @@
-import React from 'react';
-// import Dashboard from './Dashboard';
-import ChartComponent from './ChartComponent';
+import React from "react";
+import Dashboard from "./Dashboard";
 
-function App() {
 
+const App = () => {
   return (
-    <div>
-      <ChartComponent />
-      </div>
+    <div className="App">
+      <Dashboard />
+    </div>
   );
-}
-
-export default App;
+};
+export default App

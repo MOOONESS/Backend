@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import droneIconUrl from './drone.png';
+import amiIconUrl from './ami.png'; // Import custom ami icon
+import hostileIconUrl from './hostile.png'; // Import custom hostile icon
 
 function Map() {
   const [drones, setDrones] = useState([]);
   const [maxPos, setMaxPos] = useState(0); // Initialize maxPos state
-  const [i,setI]=useState(0);
+  const [i, setI] = useState(0);
 
   useEffect(() => {
     const eventSource = new EventSource('http://localhost:8000/drones/sse');
@@ -49,11 +50,25 @@ function Map() {
     return () => clearInterval(intervalId);
   }, [maxPos]); // Include maxPos in the dependency array
 
+  // Define custom drone icon for each type
+  let droneIcons = {
+    ami: L.icon({
+      iconUrl: amiIconUrl,
+      iconSize: [33, 33],
+      iconAnchor: [16, 16],
+    }),
+    hostile: L.icon({
+      iconUrl: hostileIconUrl,
+      iconSize: [35, 35],
+      iconAnchor: [16, 16],
+    }),
+  };
+
   return (
     <div>
       <MapContainer
-        center={[36.7931055164204685, 9.92767926364837]}
-        zoom={8}
+        center={[36.5, 9.93]}
+        zoom={9}
         style={{ width: '100%', height: '100vh' }}
       >
         <TileLayer
@@ -61,11 +76,12 @@ function Map() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {drones
-          .filter(drone => drone.pos === i) // Filter drones with maxPos
+          .filter(drone => drone.pos === i)
           .map((drone) => (
             <Marker
               key={drone.id}
               position={[drone.latitude, drone.longitude]}
+              icon={droneIcons[drone.nature]} // Set icon based on drone nature
             >
               <Popup>
                 <div>
@@ -81,15 +97,5 @@ function Map() {
     </div>
   );
 }
-
-// Define custom drone icon
-let droneIcon = L.icon({
-  iconUrl: droneIconUrl,
-  iconSize: [32, 32], // Adjust the size of the icon as needed
-  iconAnchor: [25, 25],
-  popupAnchor: [0, -25],
-});
-
-L.Marker.prototype.options.icon = droneIcon;
 
 export default Map;
