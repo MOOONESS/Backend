@@ -108,6 +108,6 @@ async def drone_events(db: Session = db_dependency):
             }
             yield f"{json.dumps(event)}\n\n"
             
-            await asyncio.sleep(15)  # Adjust the interval as needed
+            await asyncio.sleep(1)  # Adjust the interval as needed
 
     return EventSourceResponse(event_generator(), media_type="text/event-stream")
