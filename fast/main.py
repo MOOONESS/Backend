@@ -30,7 +30,6 @@ class TransactionBase(BaseModel):
     nature: str
     numero: int
     pos: int
-    maxpos: int
     latitude: float
     longitude: float
 
@@ -110,8 +109,7 @@ async def drone_events(request: Request, db: Session = db_dependency):
                 "numero": drone.numero,
                 "pos": drone.pos,
                 "latitude": drone.latitude,
-                "longitude": drone.longitude,
-                "maxpos": drone.maxpos
+                "longitude": drone.longitude
 
             }
             for drone in drones
@@ -133,8 +131,7 @@ async def drone_events(request: Request, db: Session = db_dependency):
                     "numero": drone.numero,
                     "pos": drone.pos,
                     "latitude": drone.latitude,
-                    "longitude": drone.longitude,
-                    "maxpos": drone.maxpos
+                    "longitude": drone.longitude
                 }
                 for drone in drones
             ]
