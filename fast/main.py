@@ -9,9 +9,21 @@ import json
 import logging
 import asyncio
 
-logger = logging.getLogger()
 
 app = FastAPI()
+
+class Login(BaseModel):
+    username: str
+    password: str
+
+@app.post("/login")
+async def login(user: Login):
+    if ((user.username == "bogh" and user.password == "0000") or (user.username == "admin" and user.password == "admin")):
+        return {"message": "Login successful"}
+    raise HTTPException(status_code=401, detail="wrong Password")
+
+
+logger = logging.getLogger()
 
 origins = [
     "*"

@@ -11,3 +11,4 @@ class drone(Base):
     pos = Column(Integer)
     latitude = Column(Float)
     longitude = Column(Float)
+    
